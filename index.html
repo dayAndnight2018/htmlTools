@@ -1,0 +1,804 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta http-equiv="Content-Type" content="text/html; charset=utf8" />
+<link rel="stylesheet" href="bulma.css"/>
+<link rel="stylesheet" href="https://static.runoob.com/assets/foundation-icons/foundation-icons.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/4.7.0/css/font-awesome.css">
+<script src="vue.js"></script>
+<script src="vue-resource.js"></script>
+<script src="jquery.js"></script>
+<title>简易账本</title>
+ 
+<style>
+	
+	.shortselect{  
+	    background:#fafdfe;  
+	    height:28px;  
+	    width:180px;  
+	    line-height:28px;  
+	    border:1px solid #9bc0dd;  
+	    -moz-border-radius:2px;  
+	    -webkit-border-radius:2px;  
+	    border-radius:2px;  
+	} 
+
+    .timeline-body {
+        margin: 0 auto;
+        width: 80%;
+        font-family: "Arial", "Microsoft YaHei", "黑体", "宋体", sans-serif;
+    }
+ 
+/*    .timeline-body ul {
+        list-style: none;
+        position: relative;
+    }*/
+
+    .timeline-body li {
+        list-style: none;
+        position: relative;
+    }
+ 
+    li.red{
+        width: 98%;
+        background-color: #ffcccc;
+        box-shadow: 3px 3px 5px 5px silver;
+        border-radius: 0px 0px 8px 8px;
+        padding: 5px;
+        margin: 5px 0px;
+
+    }
+
+    li.green{
+        width: 98%;
+        background-color: #ccffdd;
+        box-shadow: 3px 3px 5px 5px silver;
+        border-radius: 0px 0px 8px 8px;
+        padding: 5px;
+        margin: 5px 0px;
+
+    }
+ 
+    .timeline-body li div {
+        display: inline-block;
+        vertical-align: top;
+        padding-left: 10px;
+    }
+ 
+    .timeline-body .bullet {
+        width: 16px;
+        height: 16px;
+        box-sizing: border-box;
+        border-radius: 50%;
+        /*background: #fff;*/
+        z-index: 1;
+        margin-right: 20px;
+        margin-bottom: 20px;
+    }
+
+    .desc {
+    	width: 100%;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+ 
+    .timeline-body .bullet.red {
+        background-color: #ff0000;
+        border: 3px solid #ff0000;
+    }
+
+    .timeline-body .bullet.green {
+        background-color: #00cc00;
+        border: 3px solid #00cc00;
+    }
+ 
+    .date-node {
+    	width: 100%;  
+        font-size: 13px;
+        color: gray;
+        align-self: flex-end;
+    	text-align: left;
+    }
+ 
+    .timeline-body .child-node {
+        margin-top: 10px;
+        margin-bottom: 15px;
+    }
+ 
+    .node-title {
+        font-size: small;
+        font-weight: 200;
+        display: block !important;
+        max-width: 400px;
+        margin-bottom: 15px;
+    }
+
+    .main-content{
+    	display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+    }
+ 
+    .node-content {
+        display: flex;
+        flex-direction: column;
+        font-size: small;
+        font-weight: 200;
+        line-height: 1.4;
+        align-self: right;
+    }
+    .timeline-body .node-content label{
+        margin: 10px;
+    }
+    html{
+    	width: 100%;
+    	background: silver;
+    }
+
+    .ccard{
+		position: fixed;
+		top: 50%;
+		left: 50%;
+		width: 70%;
+
+		-webkit-transform: translateX(-50%) translateY(-50%);
+		-moz-transform: translateX(-50%) translateY(-50%);
+		-ms-transform: translateX(-50%) translateY(-50%);
+		transform: translateX(-50%) translateY(-50%);
+	}
+
+	.tabBar{
+		position: fixed;
+		left: 0px;
+		bottom: 0px;
+		background: dodgerblue;
+		width: 100%;
+		margin:0px auto;
+		color:white;
+	}
+
+	.tabBar ul{
+		display: flex;
+		flex-direction: row;
+		justify-content: space-around; 
+		align-items: center;
+	}
+
+	.tabBar li{
+		margin: 5px;
+		padding: 5px;
+		text-align: center; 
+	}
+
+	#addBar {
+        position: fixed;
+        right: 10px;
+        bottom: 50px;
+        z-index: 997;
+        width: 50px;
+        height: 50px;
+        box-shadow: 1px 1px 2px 2px silver;
+        border-radius: 50%;
+    }
+
+    .addTag {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        font-size: 50px;
+        background: dodgerblue;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+    }
+
+</style>
+ 
+</head>
+<body>
+	<div id="app" style="display:block;margin:0px auto;width: 100%">
+
+		<!-- 底部的tabBar -->
+		<div class="tabBar">
+			<ul>			
+				<li v-on:click="monthStatistic()">
+					月统计
+				</li>
+				<li v-on:click="seasonStatistic()">
+					季统计
+				</li>
+				<li v-on:click="yearStatistic()">
+					年统计
+				</li>
+			</ul>
+		</div>
+
+		<!-- 添加 -->
+		<div id="addBar">
+            <i class="fa fa-plus-circle addTag" v-on:click="showCard()"></i>
+        </div>
+
+
+		<nav style="background: dodgerblue; color: white;padding: 10px;position:sticky;top:0px;z-index:998;">
+			<div style="display: flex;flex-direction: row;justify-content: space-between;align-items: center;">
+				<h2 style="font-size: 20px;margin: 10px;">财务小管家</h2>
+				<div>
+					<ul style="display: flex;flex-direction: row;justify-content: space-between; align-items: center;">
+						<li style="margin-left: 10px;margin-right: 10px" class="tab"> 
+							<div style="display: flex;flex-direction: row;justify-content: space-between; align-items: center;font-size: 8px;" >
+								年份：<select class="select is-small" id="yearSelect" @change="selectYear()">
+									<option value="-1">请选择</option>
+									<option v-for="year in years" :value="year">{{year}}</option>
+								</select>
+							</div>
+						</li>
+						<li style="margin-left: 10px;margin-right: 10px" class="tab">
+							<div style="display: flex;flex-direction: row;justify-content: space-between; align-items: center;font-size: 8px;">
+								月份：<select class="select is-small" id="monthSelect" @change="selectMon()">
+									<option value="-1">请选择</option>
+									<option v-for="mon in months" :value="mon">{{mon}}</option>
+								</select>
+							</div>
+						</li>				
+					</ul>
+				</div>
+         </div>
+                <!-- <div>
+					<ul style="display: flex;flex-direction: row;justify-content: space-between; align-items: center;">					
+						<li style="margin-left: 10px;margin-right: 10px" class="tab">
+							<div style="display: flex;flex-direction: row;justify-content: space-between; align-items: center;">
+								<button class="button is-small" v-on:click="showCard()" >新增</button>
+							</div>
+						</li>
+						<li style="margin-left: 10px;margin-right: 10px" class="tab">
+							<div style="display: flex;flex-direction: row;justify-content: space-between; align-items: center;">
+								<button class="button is-small" v-on:click="remove()">移除最近</button>
+							</div>
+						</li>
+
+						<li style="margin-left: 10px;margin-right: 10px" class="tab">
+							<div style="display: flex;flex-direction: row;justify-content: space-between; align-items: center;" >
+								<button class="button is-small" v-on:click="monthStatistic()">月统计</button>
+							</div>
+						</li>
+						<li style="margin-left: 10px;margin-right: 10px" class="tab">
+							<div style="display: flex;flex-direction: row;justify-content: space-between; align-items: center;" >
+								<button class="button is-small" v-on:click="seasonStatistic()">季统计</button>
+							</div>
+						</li>
+						<li style="margin-left: 10px;margin-right: 10px" class="tab">
+							<div style="display: flex;flex-direction: row;justify-content: space-between; align-items: center;" >
+								<button class="button is-small" v-on:click="yearStatistic()">年统计</button>
+							</div>
+						</li>
+					</ul>
+				</div> -->
+
+		</nav>
+		<div style="display:none;width: 98%;margin: 10px auto;z-index:999;background: white;padding: 10px;border: 1px solid silver; border-radius: 0px 0px 8px 8px;box-shadow: 3px 5px 5px silver;" class="ccard" id="card">
+			<div style="display: flex;flex-direction: row;justify-content: space-between;">
+				<div style="font-size: 20px;">
+					新增账目
+				</div>
+				<div>
+					<button class="button is-small is-danger" @click="closeCard()">X</button>
+				</div>				
+			</div>
+			<table id="src" class="table is-striped is-centered" style="margin: 10px auto;font-size:10px" >
+				<tr>
+					<td>类别</td>
+                </tr>
+                <tr>
+					<td><input type="radio" class="radio" name="shouzhi" value="0" checked="checked" id="accountAdd" /> 收入</td>
+					<td>
+						<input type="radio" class="radio" name="shouzhi" value="1" id="accountSub" /> 支出
+				    </td>
+                </tr>
+                <tr>
+					<td>金额(元)</td>
+                </tr>
+                 <tr>
+						<td><input type="number" class="input is-small" name="money" size="15" id="account"/></td>
+                </tr>
+                
+                 <tr>
+					<td>日期</td>
+                </tr>
+                 <tr>
+					<td><input type="Date" id="date" size="15" class="input is-small "/></td>
+                </tr>
+                
+                <tr>
+					<td>备注</td>
+                </tr>
+                <tr>
+					<td>
+						<textarea id="note" size="15" class="textarea" rows="3" style="resize: none;"></textarea>
+					</td>
+                </tr>
+                
+                <tr>
+					<td>
+						<input type="button" class="button is-info" value="添加" v-on:click="add()" />
+					</td>
+                </tr>					 
+			</table>
+		</div>
+		<div style="display:none;width: 100%;margin: 10px auto;z-index:999;background: white;padding: 10px;border: 1px solid silver; border-radius: 0px 0px 8px 8px;box-shadow: 3px 5px 5px silver;" class="ccard" id="resultCard">
+			<div style="display: flex;flex-direction: row;justify-content: space-between;">
+				<div style="font-size: 20px;">
+					{{title}}
+				</div>
+				<div>
+					<button class="button is-small is-danger" @click="closeResultCard()">X</button>
+				</div>				
+			</div>
+			<div style="margin: 10px auto;text-align: center;width: 100%">
+				<canvas id="canvas_circle" ref="myCanvas" style="display:block;margin: 10px auto;"> </canvas> 		
+			</div>
+		</div>
+		<!-- <div style="width:80%;margin: 10px auto;display: flex;flex-direction: column;align-items: center;">
+			<div class="timeline-body" >
+		        <ul>
+		        	<li :class="[account.type == 1 ?'red': 'green']" v-for="account in actualAccounts">
+		                <div class="bullet" :class="[account.type == 1 ?'red': 'green']"></div>
+		                <div class="desc">
+		                    <div class="date-node">{{getDate(account.date)}}</div>
+		                    <div class="child-node">
+		                        <div class="node-title">{{account.note}}&nbsp;{{getAccountDesc(account.account)}}元</div>
+		                        <div class="node-content">
+		                        	<p>
+		                        		上次结余:<label>{{getAccountDesc(account.last)}}</label>元
+		                        	</p>
+		                        	<p>
+		                        		本次结算:<label>{{getAccountDesc(account.account)}}</label>元
+		                        	</p>
+		                        	<p>
+		                        		当前结余:<label>{{getAccountDesc(account.left)}}</label>元
+		                        	</p>
+		                    	</div>
+		                    </div>
+		                </div>
+		            </li>       
+		        </ul>
+		    </div>
+		</div> -->   
+
+        <ul style="width:100%;margin: 10px auto;display: flex;flex-direction: column;align-items: center;">
+        	<li :class="[account.type == 1 ?'red': 'green']" v-for="account in actualAccounts">
+                <div class="desc">
+                	<i class="fa fa-times" style="position: absolute;right: 0px;top:0px;width: 10px;height: 10px;" v-on:click="remove(account)"></i>
+                    <div class="child-node">
+                        <div class="node-title">事项：{{account.note}}</div>
+                        <div class="main-content">
+                        	<div class="amount">
+	                        	{{getAccountDesc(account.account)}}
+	                        </div>
+	                        <div class="node-content">
+	                        	<p>
+	                        		上次结余:<label>{{getAccountDesc(account.last)}}</label>元
+	                        	</p>
+	                        	<p>
+	                        		当前结余:<label>{{getAccountDesc(account.left)}}</label>元
+	                        	</p>
+	                    	</div>
+                        </div>
+                    </div>
+                    <div class="date-node">{{getDate(account.date)}}</div>
+                </div>
+            </li>       
+        </ul>
+	</div>	
+
+	<script type="text/javascript">
+
+		let canvas;
+		let ctxx;
+
+		var vue = new Vue({
+			el:"#app",
+			data:{
+				accounts:[],
+				currentAccount:0,
+				years:[],
+				actualAccounts:[],
+				months:[],
+				title:'',
+				canvasId:'',
+				data_arr:[],
+				color_arr:[],
+				text_arr:[]
+			},
+			mounted() {
+			    this.initCanvas();
+			},
+			watch: {
+		      title(val) {
+		        this.drawCircle();
+		      }
+		    },
+			methods:{
+				initCanvas() {
+			      console.log("初始化canvas");
+			      canvas = document.getElementById('canvas_circle');
+			      ctxx = canvas.getContext('2d');
+			      canvas.width = window.innerWidth *0.8;
+			      canvas.height = window.innerHeight / 2;
+			    },
+				add:function(){
+					//alert($("#date").val());
+					var time = new Date(Date.parse($("#date").val()));
+					//alert(typeof(time));
+					//alert(time);
+					var typeNum = $('input:radio[name="shouzhi"]:checked').val();
+					var account = parseFloat($('#account').val());
+					if(typeNum == 1){
+						account = -account;
+					}
+					var left = this.currentAccount + account;
+					var note = $('#note').val();
+					this.accounts.push({id: new Date().getTime() ,date:time, type:typeNum, account: account, last:this.currentAccount, left:left, note:note});
+					this.currentAccount = left;
+					localStorage.accounts = JSON.stringify(this.accounts); 
+					localStorage.currentAccount = this.currentAccount;
+					this.closeCard();
+					this.selectYear();
+     				this.selectMon();
+				},
+				remove:function(current){
+					// var cur = this.accounts.pop();
+					// this.currentAccount = this.currentAccount - cur.account;
+					// localStorage.accounts = JSON.stringify(this.accounts); 
+					// localStorage.currentAccount = this.currentAccount;
+     // 				this.selectMon();
+
+     				var currentIndex = -1;
+     				var currentItem = this.accounts.find((item, index) => {
+     					currentIndex = index;
+					    return item.id == current.id;
+					});
+
+					if(currentItem != undefined)
+     					this.accounts.splice(currentIndex, 1);
+
+     				this.currentAccount = this.currentAccount - currentItem.account;
+
+     				var tempAccount = this.currentAccount;
+     				for(var i = this.accounts.length - 1; i >= 0 ; i--){
+     					var temp = this.accounts[i];
+     					temp.left = tempAccount;
+     					var tempCost = temp.account;
+     					temp.last = tempAccount = tempAccount - tempCost;
+     				}
+
+					localStorage.accounts = JSON.stringify(this.accounts); 
+					localStorage.currentAccount = this.currentAccount;
+     	 			this.selectMon();
+
+				},
+				present:function(input){
+					return input.toFixed(2);
+				},
+				getDate:function(date){
+					return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
+				},
+				getAccountDesc:function(account){
+					if(account > 0){
+						return "+"+account;
+					}
+					return account;
+				},
+				closeCard: function(){
+                    $("#card").hide();
+                },
+                closeResultCard: function(){
+                    $("#resultCard").hide();
+                },
+                showCard:function(){
+                	$("#card").show();
+                },
+                showResultCard:function(cost, earn, costTitle, earnTitle){
+                	this.draw(cost, earn, costTitle, earnTitle);
+                	$("#resultCard").show();
+                },
+                selectYear:function(){
+                	var year = $("#yearSelect").val();
+                	if(year == -1){
+                		this.months = [];
+                		return;
+                	}
+                	var months = [];
+			      	for(var i = 0; i< this.accounts.length; i++){
+			      		var date = this.accounts[i].date;
+			      		if(date.getFullYear() == year)
+			      			months.push(date.getMonth() + 1);
+			      	}
+			      	const removeMore = attr => [...new Set(attr)]
+			      	months = removeMore(months);
+			      	if(months == undefined || months.length == 0)
+			      		months.push(new Date().getMonth() + 1);
+			      	this.months = months;
+                },
+                selectMon:function(){
+                	var year = $("#yearSelect").val();
+                	var mon = $("#monthSelect").val();
+                	if(mon == -1)
+                		return;
+                	var actualAccounts = [];
+                	for(var i = 0; i< this.accounts.length; i++){
+			      		var date = this.accounts[i].date;
+			      		if(date.getFullYear() == year && date.getMonth() == (mon - 1))
+			      			actualAccounts.push(this.accounts[i]);
+			      	}
+			      	this.actualAccounts = actualAccounts;
+                },
+                draw: function(cost, earn, costTitle, earnTitle) {  
+	                var data_arr = []; 
+	                var total = earn;
+	                var left = earn - cost;
+	                if(total == 0){
+	                	data_arr.push(1);
+	                	data_arr.push(0);
+	                }else{
+	                	data_arr.push((cost / total).toFixed(2));
+	                	data_arr.push((left / total).toFixed(2));
+	                }
+	                var color_arr = ['#FC4349','#2C3E50'];  
+	                var text_arr = [];  
+	                text_arr.push(costTitle);
+	  				text_arr.push(earnTitle);
+	  				this.canvasId = 'canvas_circle';
+	  				this.data_arr = data_arr;
+	  				this.color_arr = color_arr;
+	  				this.text_arr = text_arr;
+	  				this.drawCircle();
+	                //this.drawCircle("canvas_circle", data_arr, color_arr, text_arr);  
+            	},
+            	monthStatistic:function(){
+            		var year = $("#yearSelect").val();
+                	var mon = $("#monthSelect").val();
+                	if(year == -1 || mon == -1)
+                		return;
+            		this.title = year + "年" + mon + "月 月份收支统计";
+            		var cost = 0;
+            		var earn = 0;
+            		var costStr = '支出';
+            		var earnStr = '收入';
+            		for(var i = 0; i< this.accounts.length; i++){
+			      		var date = this.accounts[i].date;
+			      		if(date.getFullYear() == year && date.getMonth() == (mon - 1)){
+			      			var cur = this.accounts[i];
+			      			if(cur.type == 0){
+			      				earn = earn + cur.account;
+			      			}else{
+			      				cost = cost - cur.account;
+			      			}
+			      		}
+			      	}
+			      	costStr = costStr + cost + "元";
+			      	earnStr = earnStr + earn + "元";
+            		this.showResultCard(cost, earn, costStr, earnStr);
+            	},
+            	seasonStatistic:function(){
+            		var year = $("#yearSelect").val();
+                	var mon = $("#monthSelect").val();
+                	if(year == -1 || mon == -1)
+                		return;
+                	if(mon == 1 || mon == 2|| mon == 3){
+                		this.title = year + "年 第一季度收支统计";
+                		var cost = 0;
+	            		var earn = 0;
+	            		var costStr = '支出';
+	            		var earnStr = '收入';
+	            		for(var i = 0; i< this.accounts.length; i++){
+				      		var date = this.accounts[i].date;
+				      		if(date.getFullYear() == year && (date.getMonth() == 0 || date.getMonth() == 1 || date.getMonth() == 2)){
+				      			var cur = this.accounts[i];
+				      			if(cur.type == 0){
+				      				earn = earn + cur.account;
+				      			}else{
+				      				cost = cost - cur.account;
+				      			}
+				      		}
+				      	}
+				      	costStr = costStr + cost + "元";
+				      	earnStr = earnStr + earn + "元";
+	            		this.showResultCard(cost, earn, costStr, earnStr);
+                	}else if(mon == 4 || mon == 5|| mon == 6){
+                		this.title = year + "年 第二季度收支统计";
+                		var cost = 0;
+	            		var earn = 0;
+	            		var costStr = '支出';
+	            		var earnStr = '收入';
+	            		for(var i = 0; i< this.accounts.length; i++){
+				      		var date = this.accounts[i].date;
+				      		if(date.getFullYear() == year && (date.getMonth() == 3 || date.getMonth() == 4 || date.getMonth() == 5)){
+				      			var cur = this.accounts[i];
+				      			if(cur.type == 0){
+				      				earn = earn + cur.account;
+				      			}else{
+				      				cost = cost - cur.account;
+				      			}
+				      		}
+				      	}
+				      	costStr = costStr + cost + "元";
+				      	earnStr = earnStr + earn + "元";
+	            		this.showResultCard(cost, earn, costStr, earnStr);
+                	}else if(mon == 7 || mon == 8|| mon == 9){
+                		this.title = year + "年 第三季度收支统计";
+                		var cost = 0;
+	            		var earn = 0;
+	            		var costStr = '支出';
+	            		var earnStr = '收入';
+	            		for(var i = 0; i< this.accounts.length; i++){
+				      		var date = this.accounts[i].date;
+				      		if(date.getFullYear() == year && (date.getMonth() == 6 || date.getMonth() == 7 || date.getMonth() == 8)){
+				      			var cur = this.accounts[i];
+				      			if(cur.type == 0){
+				      				earn = earn + cur.account;
+				      			}else{
+				      				cost = cost - cur.account;
+				      			}
+				      		}
+				      	}
+				      	costStr = costStr + cost + "元";
+				      	earnStr = earnStr + earn + "元";
+	            		this.showResultCard(cost, earn, costStr, earnStr);
+                	}else{
+                		this.title = year + "年 第四季度收支统计";
+                		var cost = 0;
+	            		var earn = 0;
+	            		var costStr = '支出';
+	            		var earnStr = '收入';
+	            		for(var i = 0; i< this.accounts.length; i++){
+				      		var date = this.accounts[i].date;
+				      		if(date.getFullYear() == year && (date.getMonth() == 9 || date.getMonth() == 10 || date.getMonth() == 11)){
+				      			var cur = this.accounts[i];
+				      			if(cur.type == 0){
+				      				earn = earn + cur.account;
+				      			}else{
+				      				cost = cost - cur.account;
+				      			}
+				      		}
+				      	}
+				      	costStr = costStr + cost + "元";
+				      	earnStr = earnStr + earn + "元";
+	            		this.showResultCard(cost, earn, costStr, earnStr);
+                	}            		
+            	},
+            	yearStatistic:function(){
+            		var year = $("#yearSelect").val();
+                	var mon = $("#monthSelect").val();
+                	if(year == -1)
+                		return;
+                	this.title = year + "年 年度总收支统计";
+            		var cost = 0;
+            		var earn = 0;
+            		var costStr = '支出';
+            		var earnStr = '收入';
+            		for(var i = 0; i< this.accounts.length; i++){
+			      		var date = this.accounts[i].date;
+			      		if(date.getFullYear() == year){
+			      			var cur = this.accounts[i];
+			      			if(cur.type == 0){
+			      				earn = earn + cur.account;
+			      			}else{
+			      				cost = cost - cur.account;
+			      			}
+			      		}
+			      	}
+			      	costStr = costStr + cost + "元";
+			      	earnStr = earnStr + earn + "元";
+            		this.showResultCard(cost, earn, costStr, earnStr);
+            	},
+            	drawCircle:function() {  
+            		//let c = this.$refs.myCanvas;
+            		//alert(this.data_arr[0]);
+		            var c = document.getElementById(this.canvasId);  
+		            var ctx = c.getContext("2d");  
+
+		            c = canvas;
+		            ctx = ctxx;
+		            
+		            c.setAttribute('height', window.innerHeight /3);
+
+		            var radius = 140 / 2 - 20; //半径  
+		            var ox = radius + 20, oy = radius + 20; //圆心  
+
+		            var width = 30, height = 10; //图例宽和高  
+		            var posX = ox * 2 + 20, posY = 30;   //  
+		            var textX = posX + width + 5, textY = posY + 10;  
+
+		            var startAngle = 0; //起始弧度  
+		            var endAngle = 0;   //结束弧度  
+		            for (var i = 0; i < this.data_arr.length; i++)  
+		            {  
+		                //绘制饼图  
+		                endAngle = endAngle + this.data_arr[i] * Math.PI * 2; //结束弧度  
+		                ctx.fillStyle = this.color_arr[i];  
+		                ctx.beginPath();  
+		                ctx.moveTo(ox, oy); //移动到到圆心  
+		                ctx.arc(ox, oy, radius, startAngle, endAngle, false);  
+		                ctx.closePath();  
+		                ctx.fill();  
+		                startAngle = endAngle; //设置起始弧度  
+
+		                //绘制比例图及文字  
+		                ctx.fillStyle = this.color_arr[i];  
+		                ctx.fillRect(posX, posY + 20 * i, width, height);  
+		                ctx.moveTo(posX, posY + 20 * i);  
+		                ctx.font = 'bold 12px 微软雅黑';    //斜体 30像素 微软雅黑字体  
+		                ctx.fillStyle = this.color_arr[i]; //"#000000";  
+		                var percent = this.text_arr[i] + "：" + 100 * this.data_arr[i] + "%";  
+		                ctx.fillText(percent, textX, textY + 20 * i);  
+		            }  
+        		} 
+			}
+		});
+
+		function drawCircle(canvasId, data_arr, color_arr, text_arr)  
+        {  
+            var c = document.getElementById(canvasId);  
+            var ctx = c.getContext("2d");  
+
+            var radius = 200 / 2 - 20; //半径  
+            var ox = radius + 20, oy = radius + 20; //圆心  
+
+            var width = 30, height = 10; //图例宽和高  
+            var posX = ox * 2 + 20, posY = 30;   //  
+            var textX = posX + width + 5, textY = posY + 10;  
+
+            var startAngle = 0; //起始弧度  
+            var endAngle = 0;   //结束弧度  
+            for (var i = 0; i < data_arr.length; i++)  
+            {  
+                //绘制饼图  
+                endAngle = endAngle + data_arr[i] * Math.PI * 2; //结束弧度  
+                ctx.fillStyle = color_arr[i];  
+                ctx.beginPath();  
+                ctx.moveTo(ox, oy); //移动到到圆心  
+                ctx.arc(ox, oy, radius, startAngle, endAngle, false);  
+                ctx.closePath();  
+                ctx.fill();  
+                startAngle = endAngle; //设置起始弧度  
+
+                //绘制比例图及文字  
+                ctx.fillStyle = color_arr[i];  
+                ctx.fillRect(posX, posY + 20 * i, width, height);  
+                ctx.moveTo(posX, posY + 20 * i);  
+                ctx.font = 'bold 12px 微软雅黑';    //斜体 30像素 微软雅黑字体  
+                ctx.fillStyle = color_arr[i]; //"#000000";  
+                var percent = text_arr[i] + "：" + 100 * data_arr[i] + "%";  
+                ctx.fillText(percent, textX, textY + 20 * i);  
+            }  
+        } 
+
+		//读取本地持久化值
+		if(localStorage.accounts!=undefined){
+          	var temp = JSON.parse(localStorage.accounts);
+          	for(var i = 0 ; i<temp.length;i++){
+          		var cur = temp[i];
+          		cur.date = new Date(cur.date);
+          	}
+          	vue.accounts = temp;
+		}
+      	if(localStorage.currentAccount!=undefined)
+      		vue.currentAccount = parseFloat(localStorage.currentAccount);
+
+      	//获取记录中的年份
+      	var tempYears = [];
+      	for(var i = 0; i< vue.accounts.length; i++){
+      		tempYears.push(vue.accounts[i].date.getFullYear());
+      	}
+      	const removeMore = attr => [...new Set(attr)]
+      	tempYears = removeMore(tempYears);
+      	if(tempYears == undefined || tempYears.length == 0)
+      		tempYears.push(new Date().getFullYear());
+      	vue.years = tempYears;	
+      	$("#yearSelect").val("");
+	</script>
+</body>
+</html>
